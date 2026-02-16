@@ -1,37 +1,91 @@
 document.addEventListener('DOMContentLoaded', function() {
-        // Layer toggle logic
+        // Layer toggle logic with mode-based visibility and styling
         function setLayerVisibility(layerId, visible) {
             if (map.getLayer(layerId)) {
                 map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
             }
         }
-        function showOnly(layers) {
-            const allLayers = [
-                'nta-shortfall',
-                'emergency-food-sites-all-circle',
-                'farmers-markets-geojson-circle',
-                'fresh-zoning',
-            ];
-            allLayers.forEach(l => setLayerVisibility(l, layers.includes(l)));
+        function setLayerOpacity(layerId, opacity) {
+            if (map.getLayer(layerId)) {
+                if (layerId === 'nta-shortfall') {
+                    map.setPaintProperty(layerId, 'fill-opacity', opacity);
+                } else if (layerId === 'emergency-food-sites-all-circle' || layerId === 'farmers-markets-geojson-circle') {
+                    map.setPaintProperty(layerId, 'circle-opacity', opacity);
+                } else if (layerId === 'fresh-zoning') {
+                    map.setPaintProperty(layerId, 'line-opacity', opacity);
+                }
+            }
+        }
+        function setLayerStyle(mode) {
+            // Reset all layers
+            setLayerVisibility('nta-shortfall', false);
+            setLayerVisibility('emergency-food-sites-all-circle', false);
+            setLayerVisibility('farmers-markets-geojson-circle', false);
+            setLayerVisibility('fresh-zoning', false);
+            // Mode logic
+            if (mode === 'need') {
+                setLayerVisibility('nta-shortfall', true);
+                setLayerOpacity('nta-shortfall', 0.6);
+            } else if (mode === 'emergency') {
+                setLayerVisibility('nta-shortfall', true);
+                setLayerOpacity('nta-shortfall', 0.3);
+                setLayerVisibility('emergency-food-sites-all-circle', true);
+                setLayerOpacity('emergency-food-sites-all-circle', 0.7);
+            } else if (mode === 'fresh') {
+                setLayerVisibility('nta-shortfall', true);
+                setLayerOpacity('nta-shortfall', 0.2);
+                setLayerVisibility('farmers-markets-geojson-circle', true);
+                setLayerOpacity('farmers-markets-geojson-circle', 0.7);
+            } else if (mode === 'policy') {
+                setLayerVisibility('fresh-zoning', true);
+                setLayerOpacity('fresh-zoning', 1.0);
+                setLayerVisibility('nta-shortfall', false);
+            } else if (mode === 'mismatch') {
+                // Only show mismatch layer (advanced: add filter/highlight)
+                setLayerVisibility('nta-shortfall', true);
+                setLayerOpacity('nta-shortfall', 0.8);
+                setLayerVisibility('emergency-food-sites-all-circle', false);
+                setLayerVisibility('farmers-markets-geojson-circle', false);
+                setLayerVisibility('fresh-zoning', false);
+                // Optionally highlight mismatch NTAs
+                alert('Mismatch Index: High shortfall, low fresh access, low FRESH zoning. (Advanced highlighting can be added)');
+            }
+        }
+        // UI toggle underline
+        function setActiveToggle(mode) {
+            document.querySelectorAll('.toggle-item').forEach(item => {
+                item.classList.remove('active');
+                item.style.borderBottom = '2px solid transparent';
+            });
+            const active = document.getElementById('toggle-' + mode);
+            if (active) {
+                active.classList.add('active');
+                active.style.borderBottom = '2px solid #222';
+            }
         }
         document.getElementById('toggle-shortfall').onclick = () => {
-            showOnly(['nta-shortfall']);
+            setLayerStyle('need');
+            setActiveToggle('shortfall');
         };
         document.getElementById('toggle-emergency').onclick = () => {
-            showOnly(['nta-shortfall', 'emergency-food-sites-all-circle']);
+            setLayerStyle('emergency');
+            setActiveToggle('emergency');
         };
         document.getElementById('toggle-fresh').onclick = () => {
-            showOnly(['nta-shortfall', 'farmers-markets-geojson-circle']);
+            setLayerStyle('fresh');
+            setActiveToggle('fresh');
         };
         document.getElementById('toggle-policy').onclick = () => {
-            showOnly(['nta-shortfall', 'fresh-zoning']);
+            setLayerStyle('policy');
+            setActiveToggle('policy');
         };
         document.getElementById('toggle-mismatch').onclick = () => {
-            // Mismatch Index: show only NTAs with high shortfall, low fresh, low zoning
-            showOnly(['nta-shortfall']);
-            // Optionally highlight mismatch NTAs (advanced: add a new layer or filter)
-            alert('Mismatch Index: High shortfall, low fresh access, low FRESH zoning. (Advanced highlighting can be added)');
+            setLayerStyle('mismatch');
+            setActiveToggle('mismatch');
         };
+        // Default mode
+        setLayerStyle('need');
+        setActiveToggle('shortfall');
     mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubmlodSIsImEiOiJjbWxvcDgybjkwcXl5M2tva29ibG5tc2VmIn0.Irx4occMNtG5dMKorBjDJA';
     const map = new mapboxgl.Map({
         container: 'map',
