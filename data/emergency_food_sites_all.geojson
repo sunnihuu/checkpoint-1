@@ -1,7 +1,0 @@
-{
-  "type": "FeatureCollection",
-  "features": [
-    // ...existing Brooklyn features from emergency_food_sites.geojson...
-    // Add new features here for other boroughs as you geocode them
-  ]
-}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NYC Map Dashboard</title>
+  <link href="maps.css" rel="stylesheet">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+</head>
+<body>
+  <div id="dashboard">
+    <!-- Map boxes will be inserted here -->
+    <div class="map-row">
+      <div class="map-panel">
+        <div class="map-box" id="map0"></div>
+        <div class="map-title">Emergency Food Supply Gap</div>
+        <div class="map-legend" id="legend0"></div>
+      </div>
+      <div class="map-panel">
+        <div class="map-box" id="map1"></div>
+        <div class="map-title">NYC Farmers Markets</div>
+        <div class="map-legend" id="legend1"></div>
+      </div>
+      <div class="map-panel">
+        <div class="map-box" id="map2"></div>
+        <div class="map-title">Emergency Food Sites</div>
+        <div class="map-legend" id="legend2"></div>
+      </div>
+      <div class="map-panel">
+        <div class="map-box" id="map3"></div>
+        <div class="map-title">NYC Fresh Zoning</div>
+        <div class="map-legend" id="legend3"></div>
+      </div>
+    </div>
+    <div class="map-row">
+      <div class="map-panel">
+        <div class="map-box" id="map4"></div>
+        <div class="map-title">Heat Vulnerability Index (HVI) by ZIP</div>
+        <div class="map-legend" id="legend4"></div>
+      </div>
+      <div class="map-panel">
+        <div class="map-box" id="map5"></div>
+        <div class="map-title">NYC Truck Routes</div>
+        <div class="map-legend" id="legend5"></div>
+      </div>
+      <div class="map-panel">
+        <div class="map-box" id="map6"></div>
+        <div class="map-title">Stormwater Flood Risk</div>
+        <div class="map-legend" id="legend6"></div>
+      </div>
+      <div class="map-panel">
+        <div class="map-box" id="map7"></div>
+        <div class="map-title">Map 8</div>
+        <div class="map-legend" id="legend7"></div>
+      </div>
+    </div>
+  </div>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <script src="maps.js"></script>
+</body>
+</html>
