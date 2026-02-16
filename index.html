@@ -7,51 +7,130 @@
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 </head>
 <body>
     <!-- Top Navigation -->
-    <div style="width:100vw;height:44px;background:#f9f9f9;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:center;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:17px;font-weight:500;color:#222;letter-spacing:0.01em;position:fixed;top:0;left:0;z-index:100;">
-        Food Infrastructure Atlas &nbsp; <span style="font-size:13px;color:#bbb;font-weight:400;">NYC · 2024</span>
+    <div style="width:100vw;height:44px;background:#fff;border-bottom:1px solid #ccc;display:flex;align-items:center;justify-content:flex-start;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:22px;font-weight:700;color:#111;letter-spacing:0.01em;position:fixed;top:0;left:0;z-index:100;padding:0 24px;">
+        <div style="font-size:22px;font-weight:700;color:#111;">Food Capacity Atlas</div>
+        <div style="display:flex;gap:24px;align-items:center;margin-left:32px;">
+            <span id="dataset-btn" style="font-size:15px;font-weight:500;color:#222;cursor:pointer;">Dataset</span>
+            <span style="font-size:15px;font-weight:500;color:#222;cursor:pointer;">About</span>
+        </div>
+    </div>
+    <!-- Data Sources Popup -->
+    <div id="datasource-popup" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);min-width:320px;max-width:420px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.12);padding:24px 28px 18px 28px;z-index:999;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;">
+        <div style="font-size:18px;font-weight:600;color:#222;margin-bottom:12px;">Data Sources</div>
+        <div style="font-size:14px;color:#111;margin-bottom:8px;">Need</div>
+        <div style="font-size:13px;color:#444;margin-bottom:12px;">Emergency Food Shortfall (NYC Council, 2024)</div>
+        <div style="font-size:14px;color:#111;margin-bottom:8px;">Infrastructure</div>
+        <div style="font-size:13px;color:#444;margin-bottom:6px;">Emergency Food Providers (NYC DSS)</div>
+        <div style="font-size:13px;color:#444;margin-bottom:6px;">Farmers Markets (NYC DOHMH)</div>
+        <div style="font-size:13px;color:#444;margin-bottom:12px;">FRESH Zoning Boundaries (NYC Planning)</div>
+        <div style="font-size:14px;color:#111;margin-bottom:8px;">Administrative</div>
+        <div style="font-size:13px;color:#444;">NYC Neighborhood Tabulation Areas (NTA)</div>
+        <button id="close-datasource-popup" style="margin-top:18px;padding:6px 18px;border:none;border-radius:6px;background:#eee;color:#222;font-size:13px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;cursor:pointer;">Close</button>
     </div>
 
     <!-- Main Layout -->
-    <div style="display:flex;width:100vw;height:calc(100vh - 44px);margin-top:44px;background:#f9f9f9;">
-        <!-- Left Column -->
-        <div style="width:18vw;min-width:140px;max-width:220px;padding:60px 24px 0 60px;display:flex;flex-direction:column;align-items:flex-start;">
-            <div style="font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:18px;font-weight:500;color:#222;margin-bottom:8px;line-height:1.6;">Unmet Need</div>
-            <div style="font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:18px;font-weight:500;color:#222;margin-bottom:24px;line-height:1.6;">Infrastructure Response</div>
-            <div style="font-size:13px;color:#777;margin-bottom:18px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;">View</div>
-            <div id="layer-toggle" style="display:flex;flex-direction:column;gap:12px;width:100%;">
-                <div id="toggle-shortfall" class="toggle-item active" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid #222;cursor:pointer;width:fit-content;">Need</div>
-                <div id="toggle-emergency" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;">Emergency</div>
-                <div id="toggle-fresh" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;">Fresh</div>
-                <div id="toggle-policy" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;">Policy</div>
-                <div id="toggle-mismatch" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;">Mismatch</div>
+    <div style="display:flex;width:100vw;height:calc(100vh - 44px);margin-top:44px;background:#fff;flex-direction:row;">
+        <!-- Left Panel -->
+        <div style="width:180px;min-width:120px;max-width:220px;padding:44px 8px 0 16px;display:flex;flex-direction:column;align-items:flex-start;background:#fff;border-right:1px solid #eee;height:100%;">
+            <div style="font-size:13px;color:#444;margin-bottom:12px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;">View</div>
+            <div id="layer-toggle" style="display:flex;flex-direction:column;gap:8px;width:100%;margin-bottom:18px;">
+                <div id="toggle-shortfall" class="toggle-item active" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#111;padding-bottom:2px;border-bottom:2px solid #111;cursor:pointer;width:fit-content;" title="Need: supply_gap_lbs, food_insecure_percentage (NTA polygon)">Need</div>
+                <div id="toggle-emergency" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;" title="Emergency: Food pantries, Soup kitchens, Emergency providers (point)">Emergency</div>
+                <div id="toggle-fresh" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#444;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;" title="Fresh: Farmers markets, Farm stands (point)">Fresh</div>
+                <div id="toggle-policy" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#888;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;" title="Policy: FRESH zoning boundaries (polygon)">Policy</div>
+                <div id="toggle-mismatch" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#000;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;" title="Mismatch: 高 shortfall + 低 fresh + 低 policy">Mismatch</div>
             </div>
-        </div>
-        <!-- Right Map Area -->
-        <div style="width:82vw;height:100vh;position:relative;">
-            <div id="map" style="width:100%;height:calc(100vh - 80px);margin:40px 0 40px 0;border-radius:18px;box-shadow:0 2px 16px rgba(0,0,0,0.04);"></div>
-            <div class="legend" style="position:absolute;bottom:36px;right:36px;background:#fff;padding:8px 14px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.08);width:120px;font-size:12px;opacity:0.85;border:none;">
-                <div style="font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:13px;font-weight:500;color:#222;margin-bottom:6px;">Emergency Food Shortfall</div>
-                <div class="legend-bar" style="width:100px;margin-bottom:4px;"></div>
-                <div class="legend-labels" style="font-size:11px;color:#777;display:flex;justify-content:space-between;">
-                    <span>Low</span>
-                    <span>High</span>
+            <!-- Embedded Legend -->
+            <div id="legend-panel" style="width:100%;background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                <div style="font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:14px;font-weight:600;color:#222;margin-bottom:8px;letter-spacing:0.01em;">Legend</div>
+                <div id="legend-content" style="font-size:13px;color:#222;display:flex;flex-direction:column;gap:8px;">
+                    <div id="legend-need" style="display:block;padding:6px 0 0 0;">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px;">
+                            <span style="font-size:13px;font-weight:500;color:#222;">Emergency Food Shortfall</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;margin-top:2px;">
+                            <span style="display:inline-block;width:18px;height:18px;background:#eee;border-radius:4px;border:1px solid #bbb;"></span>
+                            <span style="font-size:12px;color:#888;">Low</span>
+                            <span style="display:inline-block;width:18px;height:18px;background:#67000d;border-radius:4px;border:1px solid #bbb;margin-left:18px;"></span>
+                            <span style="font-size:12px;color:#888;">High</span>
+                        </div>
+                    </div>
+                    <div id="legend-emergency" style="display:none;padding:6px 0 0 0;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="display:inline-block;width:18px;height:18px;background:#1976d2;border-radius:4px;border:1px solid #bbb;"></span>
+                            <span style="font-size:13px;color:#1976d2;font-weight:500;">Emergency Site</span>
+                        </div>
+                    </div>
+                    <div id="legend-fresh" style="display:none;padding:6px 0 0 0;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="display:inline-block;width:18px;height:18px;background:#ff5722;border-radius:4px;border:1px solid #bbb;"></span>
+                            <span style="font-size:13px;color:#ff5722;font-weight:500;">Farmers Market</span>
+                        </div>
+                    </div>
+                    <div id="legend-policy" style="display:none;padding:6px 0 0 0;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="display:inline-block;width:18px;height:18px;background:#00bcd4;border-radius:4px;border:1px solid #bbb;"></span>
+                            <span style="font-size:13px;color:#00bcd4;font-weight:500;">FRESH Zoning</span>
+                        </div>
+                    </div>
+                    <div id="legend-mismatch" style="display:none;padding:6px 0 0 0;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="display:inline-block;width:18px;height:18px;background:#000;border-radius:4px;border:1px solid #bbb;"></span>
+                            <span style="font-size:13px;color:#000;font-weight:500;">Mismatch Index</span>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <!-- Info Panel -->
+            <div id="info" style="width:100%;min-height:60px;background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,0.04);font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:13px;color:#111;"></div>
+        </div>
+        <!-- Map Area -->
+        <div style="flex:1;height:100%;position:relative;">
+            <div id="map" style="width:100%;height:100%;margin:0;border-radius:18px;box-shadow:0 2px 16px rgba(0,0,0,0.04);background:#fff;"></div>
         </div>
     </div>
-                <div style="display:flex;align-items:center;">
-                    <span style="display:inline-block;width:16px;height:16px;background:#8bc34a;border-radius:3px;margin-right:8px;border:1px solid #aaa;"></span>
-                    <span style="font-size:12px;color:#444;">Zoning and discretionary tax incentives</span>
-                </div>
-                <div style="display:flex;align-items:center;">
-                    <span style="display:inline-block;width:16px;height:16px;background:#eeeeee;border-radius:3px;margin-right:8px;border:1px solid #aaa;"></span>
-                    <span style="font-size:12px;color:#444;">Other / Undefined</span>
-                </div>
-            </div>
-        </div>
+
+    <!-- Footer -->
+    <div style="width:100vw;background:#fff;border-top:1px solid #ccc;padding:18px 0 24px 0;display:flex;flex-direction:column;align-items:center;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:14px;color:#222;"></div>
     <script src="script.js"></script>
+    <script>
+    // Data Sources popup logic
+    document.addEventListener('DOMContentLoaded', function() {
+        // Data source popup
+        const dsBtn = document.getElementById('dataset-btn');
+        const dsPopup = document.getElementById('datasource-popup');
+        const dsClose = document.getElementById('close-datasource-popup');
+        if (dsBtn && dsPopup && dsClose) {
+            dsBtn.onclick = function() {
+                dsPopup.style.display = 'block';
+            };
+            dsClose.onclick = function() {
+                dsPopup.style.display = 'none';
+            };
+        }
+        // Only Need layer visible and selected on load
+        // Hide all legend except Need
+        ['legend-emergency','legend-fresh','legend-policy','legend-mismatch'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        const needLegend = document.getElementById('legend-need');
+        if (needLegend) needLegend.style.display = 'block';
+        // Set toggle active state
+        document.querySelectorAll('.toggle-item').forEach(item => {
+            item.classList.remove('active');
+            item.style.borderBottom = '2px solid transparent';
+        });
+        const needToggle = document.getElementById('toggle-shortfall');
+        if (needToggle) {
+            needToggle.classList.add('active');
+            needToggle.style.borderBottom = '2px solid #111';
+        }
+    });
+    </script>
 </body>
 </html>

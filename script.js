@@ -1,91 +1,18 @@
 document.addEventListener('DOMContentLoaded', function() {
-        // Layer toggle logic with mode-based visibility and styling
-        function setLayerVisibility(layerId, visible) {
-            if (map.getLayer(layerId)) {
-                map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
-            }
-        }
-        function setLayerOpacity(layerId, opacity) {
-            if (map.getLayer(layerId)) {
-                if (layerId === 'nta-shortfall') {
-                    map.setPaintProperty(layerId, 'fill-opacity', opacity);
-                } else if (layerId === 'emergency-food-sites-all-circle' || layerId === 'farmers-markets-geojson-circle') {
-                    map.setPaintProperty(layerId, 'circle-opacity', opacity);
-                } else if (layerId === 'fresh-zoning') {
-                    map.setPaintProperty(layerId, 'line-opacity', opacity);
-                }
-            }
-        }
-        function setLayerStyle(mode) {
-            // Reset all layers
-            setLayerVisibility('nta-shortfall', false);
-            setLayerVisibility('emergency-food-sites-all-circle', false);
-            setLayerVisibility('farmers-markets-geojson-circle', false);
-            setLayerVisibility('fresh-zoning', false);
-            // Mode logic
-            if (mode === 'need') {
-                setLayerVisibility('nta-shortfall', true);
-                setLayerOpacity('nta-shortfall', 0.6);
-            } else if (mode === 'emergency') {
-                setLayerVisibility('nta-shortfall', true);
-                setLayerOpacity('nta-shortfall', 0.3);
-                setLayerVisibility('emergency-food-sites-all-circle', true);
-                setLayerOpacity('emergency-food-sites-all-circle', 0.7);
-            } else if (mode === 'fresh') {
-                setLayerVisibility('nta-shortfall', true);
-                setLayerOpacity('nta-shortfall', 0.2);
-                setLayerVisibility('farmers-markets-geojson-circle', true);
-                setLayerOpacity('farmers-markets-geojson-circle', 0.7);
-            } else if (mode === 'policy') {
-                setLayerVisibility('fresh-zoning', true);
-                setLayerOpacity('fresh-zoning', 1.0);
-                setLayerVisibility('nta-shortfall', false);
-            } else if (mode === 'mismatch') {
-                // Only show mismatch layer (advanced: add filter/highlight)
-                setLayerVisibility('nta-shortfall', true);
-                setLayerOpacity('nta-shortfall', 0.8);
-                setLayerVisibility('emergency-food-sites-all-circle', false);
-                setLayerVisibility('farmers-markets-geojson-circle', false);
-                setLayerVisibility('fresh-zoning', false);
-                // Optionally highlight mismatch NTAs
-                alert('Mismatch Index: High shortfall, low fresh access, low FRESH zoning. (Advanced highlighting can be added)');
-            }
-        }
-        // UI toggle underline
-        function setActiveToggle(mode) {
-            document.querySelectorAll('.toggle-item').forEach(item => {
-                item.classList.remove('active');
-                item.style.borderBottom = '2px solid transparent';
+        // Multi-select legend logic
+        function setLegend(activeLayers) {
+            const legendIds = ['legend-need', 'legend-emergency', 'legend-fresh', 'legend-policy', 'legend-mismatch'];
+            legendIds.forEach(id => {
+                document.getElementById(id).style.display = 'none';
             });
-            const active = document.getElementById('toggle-' + mode);
-            if (active) {
-                active.classList.add('active');
-                active.style.borderBottom = '2px solid #222';
-            }
+            activeLayers.forEach(layer => {
+                if (layer === 'need') document.getElementById('legend-need').style.display = 'block';
+                if (layer === 'emergency') document.getElementById('legend-emergency').style.display = 'block';
+                if (layer === 'fresh') document.getElementById('legend-fresh').style.display = 'block';
+                if (layer === 'policy') document.getElementById('legend-policy').style.display = 'block';
+                if (layer === 'mismatch') document.getElementById('legend-mismatch').style.display = 'block';
+            });
         }
-        document.getElementById('toggle-shortfall').onclick = () => {
-            setLayerStyle('need');
-            setActiveToggle('shortfall');
-        };
-        document.getElementById('toggle-emergency').onclick = () => {
-            setLayerStyle('emergency');
-            setActiveToggle('emergency');
-        };
-        document.getElementById('toggle-fresh').onclick = () => {
-            setLayerStyle('fresh');
-            setActiveToggle('fresh');
-        };
-        document.getElementById('toggle-policy').onclick = () => {
-            setLayerStyle('policy');
-            setActiveToggle('policy');
-        };
-        document.getElementById('toggle-mismatch').onclick = () => {
-            setLayerStyle('mismatch');
-            setActiveToggle('mismatch');
-        };
-        // Default mode
-        setLayerStyle('need');
-        setActiveToggle('shortfall');
     mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubmlodSIsImEiOiJjbWxvcDgybjkwcXl5M2tva29ibG5tc2VmIn0.Irx4occMNtG5dMKorBjDJA';
     const map = new mapboxgl.Map({
         container: 'map',
@@ -94,8 +21,137 @@ document.addEventListener('DOMContentLoaded', function() {
         zoom: 10
     });
 
+    // Single-select layer toggling
+    const layerMap = {
+        need: { id: 'nta-shortfall', opacity: 0.6 },
+        emergency: { id: 'emergency-food-sites-all-circle', opacity: 0.7 },
+        fresh: { id: 'farmers-markets-geojson-circle', opacity: 0.7 },
+        policy: { id: 'fresh-zoning', opacity: 1.0 },
+        mismatch: { id: 'nta-shortfall', opacity: 0.8 }
+    };
+    let activeLayer = 'need';
+    function setLayerVisibility(layerId, visible) {
+        if (map.getLayer(layerId)) {
+            map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+        }
+    }
+    function setLayerOpacity(layerId, opacity) {
+        if (map.getLayer(layerId)) {
+            if (layerId === 'nta-shortfall') {
+                map.setPaintProperty(layerId, 'fill-opacity', opacity);
+            } else if (layerId === 'emergency-food-sites-all-circle' || layerId === 'farmers-markets-geojson-circle') {
+                map.setPaintProperty(layerId, 'circle-opacity', opacity);
+            } else if (layerId === 'fresh-zoning') {
+                map.setPaintProperty(layerId, 'line-opacity', opacity);
+            }
+        }
+    }
+    function updateLayers() {
+        // Hide all layers
+        Object.values(layerMap).forEach(l => setLayerVisibility(l.id, false));
+        // Show only the selected layer(s)
+        if (activeLayer === 'need') {
+            setLayerVisibility(layerMap.need.id, true);
+            setLayerOpacity(layerMap.need.id, layerMap.need.opacity);
+            setLegend(['need']);
+        } else if (activeLayer === 'emergency') {
+            setLayerVisibility(layerMap.need.id, true);
+            setLayerOpacity(layerMap.need.id, 0.3);
+            setLayerVisibility(layerMap.emergency.id, true);
+            setLayerOpacity(layerMap.emergency.id, layerMap.emergency.opacity);
+            setLegend(['emergency']);
+        } else if (activeLayer === 'fresh') {
+            setLayerVisibility(layerMap.need.id, true);
+            setLayerOpacity(layerMap.need.id, 0.2);
+            setLayerVisibility(layerMap.fresh.id, true);
+            setLayerOpacity(layerMap.fresh.id, layerMap.fresh.opacity);
+            setLegend(['fresh']);
+        } else if (activeLayer === 'policy') {
+            setLayerVisibility(layerMap.policy.id, true);
+            setLayerOpacity(layerMap.policy.id, layerMap.policy.opacity);
+            setLegend(['policy']);
+        } else if (activeLayer === 'mismatch') {
+            setLayerVisibility(layerMap.need.id, true);
+            setLayerOpacity(layerMap.need.id, layerMap.mismatch.opacity);
+            setLegend(['mismatch']);
+        }
+    }
+    // UI toggle underline for single-select
+    function setActiveToggle(layer) {
+        document.querySelectorAll('.toggle-item').forEach(item => {
+            item.classList.remove('active');
+            item.style.borderBottom = '2px solid transparent';
+        });
+        const active = document.getElementById('toggle-' + layer);
+        if (active) {
+            active.classList.add('active');
+            active.style.borderBottom = '2px solid #222';
+        }
+    }
+    // Toggle logic
+    document.getElementById('toggle-shortfall').onclick = () => {
+        activeLayer = 'need';
+        updateLayers();
+        setActiveToggle('shortfall');
+    };
+    document.getElementById('toggle-emergency').onclick = () => {
+        activeLayer = 'emergency';
+        updateLayers();
+        setActiveToggle('emergency');
+    };
+    document.getElementById('toggle-fresh').onclick = () => {
+        activeLayer = 'fresh';
+        updateLayers();
+        setActiveToggle('fresh');
+    };
+    document.getElementById('toggle-policy').onclick = () => {
+        activeLayer = 'policy';
+        updateLayers();
+        setActiveToggle('policy');
+    };
+    document.getElementById('toggle-mismatch').onclick = () => {
+        activeLayer = 'mismatch';
+        updateLayers();
+        setActiveToggle('mismatch');
+    };
+    // Default mode
+    activeLayer = 'need';
+    updateLayers();
+    setActiveToggle('shortfall');
+
     // Add all emergency food sites from combined GeoJSON
     map.on('load', () => {
+            // Need layer: hover/click interaction
+            map.on('mousemove', 'nta-shortfall', function(e) {
+                if (e.features && e.features.length > 0) {
+                    const f = e.features[0].properties;
+                    const infoPanel = document.getElementById('info');
+                    infoPanel.innerHTML = `<div style="font-size:15px;font-weight:500;color:#222;">${f.NTA_Name || f.nta_name}</div>
+                        <div style="font-size:13px;color:#777;">Shortfall: ${f.supply_gap_lbs ? Number(f.supply_gap_lbs).toLocaleString() : 'N/A'} lbs</div>
+                        <div style="font-size:13px;color:#777;">Food Insecurity: ${f.food_insecure_percentage ? f.food_insecure_percentage + '%' : 'N/A'}</div>`;
+                    infoPanel.style.display = 'block';
+                }
+            });
+            map.on('mouseleave', 'nta-shortfall', function() {
+                document.getElementById('info').style.display = 'none';
+            });
+            map.on('click', 'nta-shortfall', function(e) {
+                if (e.features && e.features.length > 0) {
+                    const f = e.features[0].properties;
+                    // Diagnostic panel logic
+                    // Example: ranking, city avg, emergency/fresh site presence (stub)
+                    const infoPanel = document.getElementById('info');
+                    infoPanel.innerHTML = `<div style="font-size:15px;font-weight:500;color:#222;">${f.NTA_Name || f.nta_name}</div>
+                        <div style="font-size:13px;color:#777;">Shortfall: ${f.supply_gap_lbs ? Number(f.supply_gap_lbs).toLocaleString() : 'N/A'} lbs</div>
+                        <div style="font-size:13px;color:#777;">Food Insecurity: ${f.food_insecure_percentage ? f.food_insecure_percentage + '%' : 'N/A'}</div>
+                        <hr style="margin:8px 0;">
+                        <div style="font-size:13px;color:#222;">Ranking: (to be implemented)</div>
+                        <div style="font-size:13px;color:#222;">City Avg: (to be implemented)</div>
+                        <div style="font-size:13px;color:#222;">Emergency Site: (to be implemented)</div>
+                        <div style="font-size:13px;color:#222;">Fresh Market: (to be implemented)</div>`;
+                    infoPanel.style.display = 'block';
+                }
+            });
         map.addSource('emergency-food-sites-all', {
             type: 'geojson',
             data: 'data/emergency_food_sites_all.geojson'
@@ -430,27 +486,71 @@ document.addEventListener('DOMContentLoaded', function() {
                     { source: 'nta', id: selectedId },
                     { hover: true }
                 );
-                const props = e.features[0].properties;
+                const ntaFeature = e.features[0];
+                const ntaPolygon = ntaFeature.geometry;
+                const props = ntaFeature.properties;
                 let gap = props.supply_gap_lbs;
                 if (typeof gap === 'string') {
                     gap = gap.replace(/,/g, '');
                 }
                 let gapNum = Number(gap);
-                let gapDisplay = isNaN(gapNum) ? 'N/A' : gapNum.toLocaleString();
                 let foodInsecure = props.food_insecure_percentage;
                 if (typeof foodInsecure === 'string') {
                     foodInsecure = foodInsecure.replace(/%+$/, '');
                 }
-                document.getElementById('info').innerHTML = `
-                    <strong>Neighborhood:</strong> ${props.nta_name}<br>
-                    Food Shortfall: <strong>${gapDisplay}</strong> lbs<br>
-                    Food Insecurity Rate: ${foodInsecure}%<br>
-                    <span style="color:#888;font-size:12px;">(Click again to reset)</span>
-                `;
+
+                // Spatial join: count emergency food sites and farmers markets in NTA
+                let emergencyCount = 0;
+                let marketCount = 0;
+                let freshSupport = false;
+                // Emergency food sites
+                const emergencySource = map.getSource('emergency-food-sites-all');
+                const emergencyData = emergencySource ? emergencySource._data : null;
+                if (emergencyData && emergencyData.features) {
+                    emergencyCount = emergencyData.features.filter(f =>
+                        turf.booleanPointInPolygon(f.geometry, ntaPolygon)
+                    ).length;
+                }
+                // Farmers markets
+                const marketSource = map.getSource('farmers-markets-geojson');
+                const marketData = marketSource ? marketSource._data : null;
+                if (marketData && marketData.features) {
+                    marketCount = marketData.features.filter(f =>
+                        turf.booleanPointInPolygon(f.geometry, ntaPolygon)
+                    ).length;
+                }
+                // FRESH zoning
+                const freshSource = map.getSource('fresh-zoning');
+                const freshData = freshSource ? freshSource._data : null;
+                if (freshData && freshData.features) {
+                    freshSupport = freshData.features.some(f =>
+                        turf.booleanIntersects(f.geometry, ntaPolygon)
+                    );
+                }
+
+                // Mismatch diagnosis
+                let mismatch = '';
+                if (gapNum > 1000000 && marketCount < 1 && !freshSupport) {
+                    mismatch = 'Mismatch: High shortfall, low fresh access, no FRESH zoning.';
+                } else if (gapNum > 1000000 && emergencyCount < 1) {
+                    mismatch = 'Mismatch: High shortfall, no emergency food sites.';
+                } else if (gapNum < 500000 && freshSupport) {
+                    mismatch = 'Good: Low shortfall, FRESH zoning present.';
+                }
+
+                // Update panel
+                updatePanel({
+                    shortfall: gapNum,
+                    insecurity: foodInsecure,
+                    emergency: emergencyCount,
+                    markets: marketCount,
+                    fresh: freshSupport,
+                    mismatch: mismatch
+                });
+
                 // Zoom to neighborhood
-                const coordinates = e.features[0].geometry.coordinates;
+                const coordinates = ntaPolygon.coordinates;
                 let bounds = new mapboxgl.LngLatBounds();
-                // MultiPolygon: coordinates[0][0] is the outer ring
                 coordinates.forEach(poly => {
                     poly[0].forEach(coord => bounds.extend(coord));
                 });
