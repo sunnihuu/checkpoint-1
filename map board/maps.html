@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NYC Food System Observatory</title>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="maps.css" />
+
+  <!-- Mapbox GL -->
+  <link rel="preconnect" href="https://api.mapbox.com" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js" defer></script>
+
+  <!-- App JS -->
+  <script src="maps.js" defer></script>
+</head>
+
+<body>
+  <div class="app" id="app">
+    <!-- small, global title / status -->
+    <header class="app-header" aria-label="Application header">
+      <div class="app-title">NYC Food System Observatory</div>
+      <div class="app-hint" id="appHint">
+        Synchronized maps — zoom/pan any panel. Click a map to show its legend.
+      </div>
+    </header>
+
+    <!-- left panel -->
+    <aside class="panel" aria-label="Information panel">
+      <section class="panel-intro">
+        <h1>Food System Dashboard</h1>
+        <p>
+          Explore structural need, emergency support, market access, logistics, and climate exposure.
+          Use any map to navigate; all views stay synchronized.
+        </p>
+      </section>
+
+      <div class="panel-divider" role="separator" aria-hidden="true"></div>
+
+      <section class="panel-legend" aria-label="Legend panel">
+        <div class="legend-header">
+          <h2 id="legendTitle">Legend</h2>
+          <div id="legendSubtitle" class="muted">Click a map to select</div>
+        </div>
+
+        <!-- injected by JS -->
+        <div id="legendContent" class="legend-content" aria-live="polite"></div>
+      </section>
+    </aside>
+
+    <!-- right grid -->
+    <main class="grid" id="grid" aria-label="Synchronized map grid">
+      <!-- Use button semantics for accessibility (keyboard + focus) -->
+      <button class="cell" type="button" data-mapkey="supplyGap" aria-pressed="true">
+        <div class="cell-title">Supply Gap</div>
+        <div class="map" id="map-supplyGap" role="application" aria-label="Supply Gap map"></div>
+      </button>
+
+      <button class="cell" type="button" data-mapkey="farmersMarkets" aria-pressed="false">
+        <div class="cell-title">Farmers Markets</div>
+        <div class="map" id="map-farmersMarkets" role="application" aria-label="Farmers Markets map"></div>
+      </button>
+
+      <button class="cell" type="button" data-mapkey="emergencyFood" aria-pressed="false">
+        <div class="cell-title">Emergency Food Sites</div>
+        <div class="map" id="map-emergencyFood" role="application" aria-label="Emergency Food Sites map"></div>
+      </button>
+
+      <button class="cell" type="button" data-mapkey="freshZoning" aria-pressed="false">
+        <div class="cell-title">NYC FRESH Zoning</div>
+        <div class="map" id="map-freshZoning" role="application" aria-label="NYC FRESH Zoning map"></div>
+      </button>
+
+      <button class="cell" type="button" data-mapkey="truckRoutes" aria-pressed="false">
+        <div class="cell-title">Truck Routes</div>
+        <div class="map" id="map-truckRoutes" role="application" aria-label="Truck Routes map"></div>
+      </button>
+
+      <button class="cell" type="button" data-mapkey="floodRisk" aria-pressed="false">
+        <div class="cell-title">Flood Risk</div>
+        <div class="map" id="map-floodRisk" role="application" aria-label="Flood Risk map"></div>
+      </button>
+    </main>
+  </div>
+
+  <noscript>
+    This site requires JavaScript to load the interactive maps.
+  </noscript>
+</body>
+</html>

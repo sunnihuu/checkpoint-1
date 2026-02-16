@@ -1,7 +1,19 @@
+// Panel update function for diagnosis
+function updatePanel(data) {
+    document.getElementById("info").innerHTML = `
+        <div style="font-size:16px;font-weight:500;color:#222;margin-bottom:8px;">Neighborhood Diagnosis</div>
+        <div style="font-size:13px;color:#777;">Emergency Food Shortfall: ${data.shortfall ? Number(data.shortfall).toLocaleString() : 'N/A'} lbs</div>
+        <div style="font-size:13px;color:#777;">Food Insecurity Rate: ${data.insecurity ? data.insecurity + '%' : 'N/A'}</div>
+        <div style="font-size:13px;color:#777;">Emergency Sites: ${data.emergency}</div>
+        <div style="font-size:13px;color:#777;">Farmers Markets: ${data.markets}</div>
+        <div style="font-size:13px;color:#777;">FRESH Policy Support: ${data.fresh ? 'Yes' : 'No'}</div>
+        <div style="font-size:13px;color:#222;margin-top:8px;">System Diagnosis: ${data.mismatch || ''}</div>
+    `;
+}
 document.addEventListener('DOMContentLoaded', function() {
         // Multi-select legend logic
         function setLegend(activeLayers) {
-            const legendIds = ['legend-need', 'legend-emergency', 'legend-fresh', 'legend-policy', 'legend-mismatch'];
+            const legendIds = ['legend-need', 'legend-emergency', 'legend-fresh', 'legend-policy'];
             legendIds.forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
@@ -26,8 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
         need: { id: 'nta-shortfall', opacity: 0.6 },
         emergency: { id: 'emergency-food-sites-all-circle', opacity: 0.7 },
         fresh: { id: 'farmers-markets-geojson-circle', opacity: 0.7 },
-        policy: { id: 'fresh-zoning', opacity: 1.0 },
-        mismatch: { id: 'nta-shortfall', opacity: 0.8 }
+        policy: { id: 'fresh-zoning', opacity: 1.0 }
     };
     let activeLayer = 'need';
     function setLayerVisibility(layerId, visible) {
@@ -49,20 +60,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateLayers() {
         // Hide all layers
         Object.values(layerMap).forEach(l => setLayerVisibility(l.id, false));
-        // Show only the selected layer(s)
+        // Show only the selected layer
         if (activeLayer === 'need') {
             setLayerVisibility(layerMap.need.id, true);
             setLayerOpacity(layerMap.need.id, layerMap.need.opacity);
             setLegend(['need']);
         } else if (activeLayer === 'emergency') {
-            setLayerVisibility(layerMap.need.id, true);
-            setLayerOpacity(layerMap.need.id, 0.3);
             setLayerVisibility(layerMap.emergency.id, true);
             setLayerOpacity(layerMap.emergency.id, layerMap.emergency.opacity);
             setLegend(['emergency']);
         } else if (activeLayer === 'fresh') {
-            setLayerVisibility(layerMap.need.id, true);
-            setLayerOpacity(layerMap.need.id, 0.2);
             setLayerVisibility(layerMap.fresh.id, true);
             setLayerOpacity(layerMap.fresh.id, layerMap.fresh.opacity);
             setLegend(['fresh']);
@@ -70,10 +77,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setLayerVisibility(layerMap.policy.id, true);
             setLayerOpacity(layerMap.policy.id, layerMap.policy.opacity);
             setLegend(['policy']);
-        } else if (activeLayer === 'mismatch') {
-            setLayerVisibility(layerMap.need.id, true);
-            setLayerOpacity(layerMap.need.id, layerMap.mismatch.opacity);
-            setLegend(['mismatch']);
         }
     }
     // UI toggle underline for single-select
@@ -109,11 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateLayers();
         setActiveToggle('policy');
     };
-    document.getElementById('toggle-mismatch').onclick = () => {
-        activeLayer = 'mismatch';
-        updateLayers();
-        setActiveToggle('mismatch');
-    };
     // Default mode
     activeLayer = 'need';
     updateLayers();
@@ -137,19 +135,56 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             map.on('click', 'nta-shortfall', function(e) {
                 if (e.features && e.features.length > 0) {
-                    const f = e.features[0].properties;
-                    // Diagnostic panel logic
-                    // Example: ranking, city avg, emergency/fresh site presence (stub)
-                    const infoPanel = document.getElementById('info');
-                    infoPanel.innerHTML = `<div style="font-size:15px;font-weight:500;color:#222;">${f.NTA_Name || f.nta_name}</div>
-                        <div style="font-size:13px;color:#777;">Shortfall: ${f.supply_gap_lbs ? Number(f.supply_gap_lbs).toLocaleString() : 'N/A'} lbs</div>
-                        <div style="font-size:13px;color:#777;">Food Insecurity: ${f.food_insecure_percentage ? f.food_insecure_percentage + '%' : 'N/A'}</div>
-                        <hr style="margin:8px 0;">
-                        <div style="font-size:13px;color:#222;">Ranking: (to be implemented)</div>
-                        <div style="font-size:13px;color:#222;">City Avg: (to be implemented)</div>
-                        <div style="font-size:13px;color:#222;">Emergency Site: (to be implemented)</div>
-                        <div style="font-size:13px;color:#222;">Fresh Market: (to be implemented)</div>`;
-                    infoPanel.style.display = 'block';
+                    const ntaFeature = e.features[0];
+                    const ntaPolygon = ntaFeature.geometry;
+                    const props = ntaFeature.properties;
+                    let gap = props.supply_gap_lbs;
+                    if (typeof gap === 'string') {
+                        gap = gap.replace(/,/g, '');
+                    }
+                    let gapNum = Number(gap);
+                    let foodInsecure = props.food_insecure_percentage;
+                    if (typeof foodInsecure === 'string') {
+                        foodInsecure = foodInsecure.replace(/%+$/, '');
+                    }
+                    // Spatial join: count emergency food sites and farmers markets in NTA
+                    let emergencyCount = 0;
+                    let marketCount = 0;
+                    let freshSupport = false;
+                    // Emergency food sites
+                    const emergencySource = map.getSource('emergency-food-sites-all');
+                    const emergencyData = emergencySource ? emergencySource._data : null;
+                    if (emergencyData && emergencyData.features) {
+                        emergencyCount = emergencyData.features.filter(f =>
+                            turf.booleanPointInPolygon(f.geometry, ntaPolygon)
+                        ).length;
+                    }
+                    // Farmers markets
+                    const marketSource = map.getSource('farmers-markets-geojson');
+                    const marketData = marketSource ? marketSource._data : null;
+                    if (marketData && marketData.features) {
+                        marketCount = marketData.features.filter(f =>
+                            turf.booleanPointInPolygon(f.geometry, ntaPolygon)
+                        ).length;
+                    }
+                    // FRESH zoning
+                    const freshSource = map.getSource('fresh-zoning');
+                    const freshData = freshSource ? freshSource._data : null;
+                    if (freshData && freshData.features) {
+                        freshSupport = freshData.features.some(f =>
+                            turf.booleanIntersects(f.geometry, ntaPolygon)
+                        );
+                    }
+                    // Update panel with summary
+                    updatePanel({
+                        name: props.NTA_Name || props.nta_name,
+                        shortfall: gapNum,
+                        insecurity: foodInsecure,
+                        emergency: emergencyCount,
+                        markets: marketCount,
+                        fresh: freshSupport
+                    });
+                    document.getElementById('info').style.display = 'block';
                 }
             });
         map.addSource('emergency-food-sites-all', {
