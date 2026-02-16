@@ -1,5 +1,9 @@
-// ✅ 建议：不要把 token 公开贴出；本地开发也建议放到 config.js 或环境变量
-mapboxgl.accessToken = 'PUT_YOUR_TOKEN_HERE';
+
+
+if (!window.mapboxgl) {
+  console.error("Mapbox GL not loaded. Check script tag / network.");
+}
+mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubmlodSIsImEiOiJjbWxvcDgybjkwcXl5M2tva29ibG5tc2VmIn0.Irx4occMNtG5dMKorBjDJA';
 
 const MAP_KEYS = [
   "supplyGap",
@@ -13,12 +17,12 @@ const MAP_KEYS = [
 const maps = new Map();
 
 const DATA_SOURCES = {
-  supplyGap:       "../data/nta_supply_gap_2024.geojson",
-  farmersMarkets:  "../data/nyc_farmers_markets.geojson",   // ✅ 转换后的 geojson
-  emergencyFood:   "../data/cfc_food_sites.geojson",
-  freshZoning:     "../data/nyc-fresh-zoning.geojson",      // ✅ 建议你重命名为 zoning
-  truckRoutes:     "../data/nyc-truck-routes-2026.geojson",
-  floodRisk:       "../data/stormwater-flood.geojson"       // ✅ 建议你重命名为 stormwater
+  supplyGap:       "/Users/sunni/Desktop/GitHub/checkpoint-1/data/nta_supply_gap_2024.geojson",
+  farmersMarkets:  "/Users/sunni/Desktop/GitHub/checkpoint-1/data/nyc_farmers_markets.geojson",   // ✅ 转换后的 geojson
+  emergencyFood:   "/Users/sunni/Desktop/GitHub/checkpoint-1/data/cfc_food_sites.geojson",
+  freshZoning:     "/Users/sunni/Desktop/GitHub/checkpoint-1/data/nyc-fresh-zoning.geojson",      // ✅ 建议你重命名为 zoning
+  truckRoutes:     "/Users/sunni/Desktop/GitHub/checkpoint-1/data/nyc-truck-routes-2026.geojson",
+  floodRisk:       "/Users/sunni/Desktop/GitHub/checkpoint-1/data/stormwater-flood.geojson"       // ✅ 建议你重命名为 stormwater
 };
 
 // --- Layers per map ---
@@ -124,19 +128,27 @@ function addLayersForKey(map, key) {
 }
 
 // --- Init maps ---
-MAP_KEYS.forEach((key) => {
-  const map = new mapboxgl.Map({
-    container: `map-${key}`,
-    style: "mapbox://styles/mapbox/light-v11",
-    center: [-73.95, 40.73],
-    zoom: 10.5,
-    interactive: true,
-  });
-
-  maps.set(key, map);
-
-  map.on("load", () => {
-    addLayersForKey(map, key);
+window.addEventListener("load", () => {
+  if (!window.mapboxgl) {
+    console.error("Mapbox GL not loaded.");
+    return;
+  }
+  MAP_KEYS.forEach((key) => {
+    const map = new mapboxgl.Map({
+      container: `map-${key}`,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: [-73.95, 40.73],
+      zoom: 10.5,
+      interactive: true,
+    });
+    maps.set(key, map);
+    map.on("load", () => {
+      map.resize();
+      addLayersForKey(map, key);
+    });
+    map.on("error", (e) => {
+      console.error("Map error:", key, e?.error);
+    });
   });
 });
 

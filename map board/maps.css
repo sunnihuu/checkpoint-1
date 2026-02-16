@@ -1,3 +1,8 @@
+html, body { height: 100%; }
+.app { height: 100vh; }
+.grid { height: calc(100vh - 28px); }
+.cell { position: relative; min-height: 320px; }
+.map { position: absolute; inset: 0; }
 :root{
   --panel-w: 340px;
   --gap: 20px;
