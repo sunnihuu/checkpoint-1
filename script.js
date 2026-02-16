@@ -1,4 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
+        // Layer toggle logic
+        function setLayerVisibility(layerId, visible) {
+            if (map.getLayer(layerId)) {
+                map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+            }
+        }
+        function showOnly(layers) {
+            const allLayers = [
+                'nta-shortfall',
+                'emergency-food-sites-all-circle',
+                'farmers-markets-geojson-circle',
+                'fresh-zoning',
+            ];
+            allLayers.forEach(l => setLayerVisibility(l, layers.includes(l)));
+        }
+        document.getElementById('toggle-shortfall').onclick = () => {
+            showOnly(['nta-shortfall']);
+        };
+        document.getElementById('toggle-emergency').onclick = () => {
+            showOnly(['nta-shortfall', 'emergency-food-sites-all-circle']);
+        };
+        document.getElementById('toggle-fresh').onclick = () => {
+            showOnly(['nta-shortfall', 'farmers-markets-geojson-circle']);
+        };
+        document.getElementById('toggle-policy').onclick = () => {
+            showOnly(['nta-shortfall', 'fresh-zoning']);
+        };
+        document.getElementById('toggle-mismatch').onclick = () => {
+            // Mismatch Index: show only NTAs with high shortfall, low fresh, low zoning
+            showOnly(['nta-shortfall']);
+            // Optionally highlight mismatch NTAs (advanced: add a new layer or filter)
+            alert('Mismatch Index: High shortfall, low fresh access, low FRESH zoning. (Advanced highlighting can be added)');
+        };
     mapboxgl.accessToken = 'pk.eyJ1Ijoic3VubmlodSIsImEiOiJjbWxvcDgybjkwcXl5M2tva29ibG5tc2VmIn0.Irx4occMNtG5dMKorBjDJA';
     const map = new mapboxgl.Map({
         container: 'map',

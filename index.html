@@ -9,35 +9,39 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="header" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:20;text-align:center;background:rgba(255,255,255,0.95);padding:16px 32px 10px 32px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);max-width:520px;">
-        <h1 style="margin:0 0 8px 0;font-size:1.6rem;">Emergency Food Shortfall in NYC (2024)</h1>
-        <div style="font-size:1.05rem;color:#333;">This map shows the estimated difference between emergency food needed and food currently available in each neighborhood.<br>Darker areas indicate a larger shortfall.</div>
+    <!-- Top Navigation -->
+    <div style="width:100vw;height:44px;background:#f9f9f9;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:center;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:17px;font-weight:500;color:#222;letter-spacing:0.01em;position:fixed;top:0;left:0;z-index:100;">
+        Food Infrastructure Atlas &nbsp; <span style="font-size:13px;color:#bbb;font-weight:400;">NYC · 2024</span>
     </div>
-    <div id="map"></div>
-    <div id="info" class="info-panel"></div>
-        <div class="legend">
-            <h4>Emergency Food Shortfall (2024)</h4>
-            <div style="font-size:12px;color:#444;margin-bottom:6px;">Color intensity represents the estimated amount of emergency food missing in each neighborhood.</div>
-            <div class="legend-bar"></div>
-            <div class="legend-labels">
-                <span>Less unmet need</span>
-                <span>More unmet need</span>
+
+    <!-- Main Layout -->
+    <div style="display:flex;width:100vw;height:calc(100vh - 44px);margin-top:44px;background:#f9f9f9;">
+        <!-- Left Column -->
+        <div style="width:18vw;min-width:140px;max-width:220px;padding:60px 24px 0 60px;display:flex;flex-direction:column;align-items:flex-start;">
+            <div style="font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:18px;font-weight:500;color:#222;margin-bottom:8px;line-height:1.6;">Unmet Need</div>
+            <div style="font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:18px;font-weight:500;color:#222;margin-bottom:24px;line-height:1.6;">Infrastructure Response</div>
+            <div style="font-size:13px;color:#777;margin-bottom:18px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;">View</div>
+            <div id="layer-toggle" style="display:flex;flex-direction:column;gap:12px;width:100%;">
+                <div id="toggle-shortfall" class="toggle-item active" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid #222;cursor:pointer;width:fit-content;">Need</div>
+                <div id="toggle-emergency" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;">Emergency</div>
+                <div id="toggle-fresh" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;">Fresh</div>
+                <div id="toggle-policy" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;">Policy</div>
+                <div id="toggle-mismatch" class="toggle-item" style="font-size:15px;font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;color:#222;padding-bottom:2px;border-bottom:2px solid transparent;cursor:pointer;width:fit-content;">Mismatch</div>
             </div>
-            <div style="margin-top:8px;display:flex;align-items:center;">
-                <span style="display:inline-block;width:16px;height:16px;background:#cccccc;border-radius:3px;margin-right:8px;border:1px solid #aaa;"></span>
-                <span style="font-size:12px;color:#444;">No Data / Not Residential Area</span>
+        </div>
+        <!-- Right Map Area -->
+        <div style="width:82vw;height:100vh;position:relative;">
+            <div id="map" style="width:100%;height:calc(100vh - 80px);margin:40px 0 40px 0;border-radius:18px;box-shadow:0 2px 16px rgba(0,0,0,0.04);"></div>
+            <div class="legend" style="position:absolute;bottom:36px;right:36px;background:#fff;padding:8px 14px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.08);width:120px;font-size:12px;opacity:0.85;border:none;">
+                <div style="font-family:'Inter', 'IBM Plex Sans', Arial, sans-serif;font-size:13px;font-weight:500;color:#222;margin-bottom:6px;">Emergency Food Shortfall</div>
+                <div class="legend-bar" style="width:100px;margin-bottom:4px;"></div>
+                <div class="legend-labels" style="font-size:11px;color:#777;display:flex;justify-content:space-between;">
+                    <span>Low</span>
+                    <span>High</span>
+                </div>
             </div>
-            <hr style="margin:12px 0;">
-            <h4 style="margin-bottom:6px;font-size:1rem;">NYC Fresh Zoning</h4>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="display:flex;align-items:center;">
-                    <span style="display:inline-block;width:16px;height:16px;background:#ffd600;border-radius:3px;margin-right:8px;border:1px solid #aaa;"></span>
-                    <span style="font-size:12px;color:#444;">Discretionary tax incentives</span>
-                </div>
-                <div style="display:flex;align-items:center;">
-                    <span style="display:inline-block;width:16px;height:16px;background:#00bcd4;border-radius:3px;margin-right:8px;border:1px solid #aaa;"></span>
-                    <span style="font-size:12px;color:#444;">Zoning incentives</span>
-                </div>
+        </div>
+    </div>
                 <div style="display:flex;align-items:center;">
                     <span style="display:inline-block;width:16px;height:16px;background:#8bc34a;border-radius:3px;margin-right:8px;border:1px solid #aaa;"></span>
                     <span style="font-size:12px;color:#444;">Zoning and discretionary tax incentives</span>
