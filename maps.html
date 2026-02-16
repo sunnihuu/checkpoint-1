@@ -4,54 +4,70 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NYC Map Dashboard</title>
-  <link href="maps.css" rel="stylesheet">
+    <link href="./maps.css" rel="stylesheet">
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 </head>
 <body>
-  <div id="dashboard">
-    <!-- Map boxes will be inserted here -->
-    <div class="map-row">
-      <div class="map-panel">
-        <div class="map-box" id="map0"></div>
-        <div class="map-title">Emergency Food Supply Gap</div>
-        <div class="map-legend" id="legend0"></div>
-      </div>
-      <div class="map-panel">
-        <div class="map-box" id="map1"></div>
-        <div class="map-title">NYC Farmers Markets</div>
-        <div class="map-legend" id="legend1"></div>
-      </div>
-      <div class="map-panel">
-        <div class="map-box" id="map2"></div>
-        <div class="map-title">Emergency Food Sites</div>
-        <div class="map-legend" id="legend2"></div>
-      </div>
-      <div class="map-panel">
-        <div class="map-box" id="map3"></div>
-        <div class="map-title">NYC Fresh Zoning</div>
-        <div class="map-legend" id="legend3"></div>
+  <div class="main-flex">
+    <div class="left-panel">
+      <div class="intro-block">
+        <div class="main-title scenographic-title">NYC Food System Observatory</div>
+        <div class="subtitle">A synchronized spatial analysis of food vulnerability, emergency support, and climate exposure across New York City.</div>
+        <div class="intro-text">
+          Explore New York City’s food system through six synchronized maps.<br>
+          Each panel represents a structural variable — from unmet food need and emergency food distribution to market access, zoning policy, logistics corridors, and climate exposure.<br><br>
+          Zoom into any neighborhood to compare how food vulnerability, infrastructure, and environmental risk intersect.<br><br>
+          This interface reveals not isolated data layers, but the spatial relationships that shape structural food fragility.
+        </div>
+        <div class="sync-instruction sticky-sync">
+          All maps are synchronized. Zoom or pan in any panel to compare spatial conditions.
+        </div>
       </div>
     </div>
-    <div class="map-row">
-      <div class="map-panel">
-        <div class="map-box" id="map4"></div>
-        <div class="map-title">Heat Vulnerability Index (HVI) by ZIP</div>
-        <div class="map-legend" id="legend4"></div>
-      </div>
-      <div class="map-panel">
-        <div class="map-box" id="map5"></div>
-        <div class="map-title">NYC Truck Routes</div>
-        <div class="map-legend" id="legend5"></div>
-      </div>
-      <div class="map-panel">
-        <div class="map-box" id="map6"></div>
-        <div class="map-title">Stormwater Flood Risk</div>
-        <div class="map-legend" id="legend6"></div>
-      </div>
-      <div class="map-panel">
-        <div class="map-box" id="map7"></div>
-        <div class="map-title">Map 8</div>
-        <div class="map-legend" id="legend7"></div>
+    <div class="right-panel">
+      <div id="dashboard">
+        <div class="map-row scenographic-row">
+          <div class="map-panel">
+            <div class="map-title">Supply Gap</div>
+            <div class="map-subtitle">Unmet emergency food need</div>
+            <div class="map-box" id="map0"></div>
+            <div class="map-legend" id="legend0"></div>
+          </div>
+          <div class="map-panel">
+            <div class="map-title">Food Insecurity %</div>
+            <div class="map-subtitle">Share of food-insecure residents</div>
+            <div class="map-box" id="map1"></div>
+            <div class="map-legend" id="legend1"></div>
+          </div>
+          <div class="map-panel">
+            <div class="map-title">Emergency Food Sites</div>
+            <div class="map-subtitle">CFC and pantry locations</div>
+            <div class="map-box" id="map2"></div>
+            <div class="map-legend" id="legend2"></div>
+          </div>
+        </div>
+        <div class="map-row scenographic-row">
+          <div class="map-panel">
+            <div class="map-title">CFC Density by NTA</div>
+            <div class="map-subtitle">Sites per 1,000 residents</div>
+            <div class="map-box" id="map3"></div>
+            <div class="map-legend" id="legend3"></div>
+          </div>
+          <div class="map-panel">
+            <div class="map-title">Farmers Markets</div>
+            <div class="map-subtitle">Seasonal market locations</div>
+            <div class="map-box" id="map4"></div>
+            <div class="map-legend" id="legend4"></div>
+          </div>
+          <div class="map-panel">
+            <div class="map-title">Fresh Zoning</div>
+            <div class="map-subtitle">NYC FRESH zoning boundaries</div>
+            <div class="map-box" id="map5"></div>
+            <div class="map-legend" id="legend5"></div>
+          </div>
+        </div>
+        <!-- Hover summary card placeholder -->
+        <div id="hover-summary-card"></div>
       </div>
     </div>
   </div>

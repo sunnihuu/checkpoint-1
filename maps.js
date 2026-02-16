@@ -117,11 +117,11 @@ const LAYER_CONFIGS = [
       'circle-opacity': 0.85
     }
   },
-  // Emergency Food Sites (points, circle)
-  {
   // CFC Food Sites (replaces Emergency Food Sites)
-    type: 'circle',
+  {
     id: 'cfc-food-sites',
+    type: 'circle',
+    paint: {
       'circle-radius': 5,
       'circle-color': '#e31a1c',
       'circle-stroke-width': 1.5,
